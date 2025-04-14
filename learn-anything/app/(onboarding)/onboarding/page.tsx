@@ -1,33 +1,42 @@
 "use client"
 
+import { useState } from 'react';
+
+import { Session, User } from '@supabase/supabase-js';
+
+import { OnboardingStep1 } from '@/components/onboarding/step1';
+import { OnboardingStep2 } from '@/components/onboarding/step2';
+
 import { Button } from '@/components/ui/button';
-import { Session } from '@supabase/supabase-js';
 
 type OnboardingProps = {
-    userSession: Session | null;
+    user: User
+    userSession: Session | null;  // this is only for sending the token to the backend for validation
 }
 
-const handleSampleUserCreation = async (token: string | undefined) => {
-    const response = await fetch(`http://localhost:8000/sample_hit`,
-        {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
-    )
+export const Onboarding = ({ user, userSession }: OnboardingProps) => {
 
-    console.log(response)
-}
+    const [step, setStep] = useState<number>(1)
 
-export const Onboarding = ({ userSession }: OnboardingProps) => {
+    const handleNext = () => {
+        setStep(prev => prev + 1)
+    }
+
+    const handleBack = () => {
+        setStep(prev => prev - 1)
+    }
+
+    const userName = user.user_metadata.full_name;
 
     return (
-        <div className='flex flex-col gap-4'>
-            Onboarding start for {userSession?.user.email}
-            <Button onClick={() => { handleSampleUserCreation(userSession?.access_token) }}>
-                Start
-            </Button>
+        <div className='flex flex-col max-w-4xl w-full'>
+            {step > 1 && (
+                <div className='flex justify-start m-1'>
+                    <Button onClick={handleBack} variant={'secondary'}>Back</Button>
+                </div>
+            )}
+            {step === 1 && <OnboardingStep1 userSession={userSession} userName={userName} onNext={handleNext} />}
+            {step === 2 && <OnboardingStep2 />}
         </div>
     )
 }

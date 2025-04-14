@@ -36,7 +36,7 @@ export default function LoginPage() {
 
     return (
         <div>
-            <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700">
+            <div className="relative flex min-h-screen items-center justify-center">
                 {/* SVG background element */}
                 <svg
                     className="absolute inset-0 w-full h-full pointer-events-none"

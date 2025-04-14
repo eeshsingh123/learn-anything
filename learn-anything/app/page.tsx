@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { User, Session } from '@supabase/supabase-js';
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client"
 import { Onboarding } from "@/app/(onboarding)/onboarding/page";
@@ -16,7 +15,6 @@ export default function Home() {
     const [userSession, setUserSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(false);
 
-    const router = useRouter();
     const supabase = createClient();
 
     useEffect(() => {
@@ -46,28 +44,19 @@ export default function Home() {
         )
     }
 
-    const handleSignOut = async () => {
-        const { error } = await supabase.auth.signOut();
-        if (!error) {
-            router.push("/login")
-        }
-    }
-
     return (
-        <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-            <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+        <div className="flex flex-col justify-center items-center min-h-screen">
+            <main className="w-full mx-auto py-8 px-4">
                 {user ? (
-                    <div className="flex flex-col">
-                        <h1>Welcome: {user.user_metadata.full_name}</h1>
-                        <Button onClick={handleSignOut}>
-                            Sign Out
-                        </Button>
-                        <Onboarding userSession={userSession} />
+                    <div className="flex flex-col items-center gap-4 text-center">
+                        <Onboarding user={user} userSession={userSession} />
                     </div>
                 ) : (
-                    <Link href={"/login"}>
-                        <Button>Login</Button>
-                    </Link>
+                    <div className="flex justify-center">
+                        <Link href={"/login"}>
+                            <Button>Login</Button>
+                        </Link>
+                    </div>
                 )}
             </main>
         </div>
