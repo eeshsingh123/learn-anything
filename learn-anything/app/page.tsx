@@ -5,7 +5,7 @@ import { User, Session } from '@supabase/supabase-js';
 import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/client"
-import { Onboarding } from "@/app/(onboarding)/onboarding/page";
+import { OnboardingFlow } from "@/app/(onboarding)/onboarding/page";
 
 import { Button } from "@/components/ui/button";
 
@@ -45,11 +45,11 @@ export default function Home() {
     }
 
     return (
-        <div className="flex flex-col justify-center items-center min-h-screen">
-            <main className="w-full mx-auto py-8 px-4">
+        <div>
+            <main>
                 {user ? (
-                    <div className="flex flex-col items-center gap-4 text-center">
-                        <Onboarding user={user} userSession={userSession} />
+                    <div className="flex flex-col justify-center items-center min-h-screen">
+                        <OnboardingFlow userName={user.user_metadata.full_name} userSession={userSession} />
                     </div>
                 ) : (
                     <div className="flex justify-center">

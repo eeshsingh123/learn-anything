@@ -2,41 +2,69 @@
 
 import { useState } from 'react';
 
-import { Session, User } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
 
 import { OnboardingStep1 } from '@/components/onboarding/step1';
 import { OnboardingStep2 } from '@/components/onboarding/step2';
 
 import { Button } from '@/components/ui/button';
+import { ChevronLeft } from 'lucide-react';
 
-type OnboardingProps = {
-    user: User
-    userSession: Session | null;  // this is only for sending the token to the backend for validation
+type OnboardingState = {
+    workspaceId: string | null;
+    currentStep: number;
+    userSession: Session | null;
+    userName: string;
 }
 
-export const Onboarding = ({ user, userSession }: OnboardingProps) => {
+export const OnboardingFlow = ({ userSession, userName }: { userSession: Session | null; userName: string }) => {
+    const [state, setState] = useState<OnboardingState>({
+        workspaceId: null,
+        currentStep: 1,
+        userSession,
+        userName
+    });
 
-    const [step, setStep] = useState<number>(1)
-
-    const handleNext = () => {
-        setStep(prev => prev + 1)
-    }
+    const handleStep1Complete = (workspaceId: string) => {
+        setState(prev => ({
+            ...prev,
+            workspaceId,
+            currentStep: 2
+        }));
+    };
 
     const handleBack = () => {
-        setStep(prev => prev - 1)
+        setState(prev => ({
+            ...prev,
+            currentStep: prev.currentStep - 1
+        }));
     }
-
-    const userName = user.user_metadata.full_name;
 
     return (
         <div className='flex flex-col max-w-4xl w-full'>
-            {step > 1 && (
-                <div className='flex justify-start m-1'>
-                    <Button onClick={handleBack} variant={'secondary'}>Back</Button>
+            {state.currentStep > 1 && (
+                <div className='flex justify-start mb-12'>
+                    <Button onClick={handleBack} variant={'secondary'} className='flex justify-center'>
+                        <ChevronLeft />
+                        Back
+                    </Button>
                 </div>
             )}
-            {step === 1 && <OnboardingStep1 userSession={userSession} userName={userName} onNext={handleNext} />}
-            {step === 2 && <OnboardingStep2 />}
+            {state.currentStep === 1 && (
+                <OnboardingStep1
+                    userSession={state.userSession}
+                    userName={state.userName}
+                    onNext={handleStep1Complete}
+                />
+            )}
+            {state.currentStep === 2 && (
+                <OnboardingStep2
+                    userSession={state.userSession}
+                    workspaceId={state.workspaceId!}
+                    userName={state.userName}
+                    onNext={() => setState(prev => ({ ...prev, currentStep: 3 }))}
+                />
+            )}
         </div>
-    )
-}
+    );
+};

@@ -14,6 +14,7 @@ from ..models.user import User
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="supabase-auth")
 
+
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     try:
         response = supabase.auth.get_user(token)
@@ -21,7 +22,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
             raise HTTPException(status_code=401, detail="Invalid or expired token")
         user = response.user
                 
-        # check in redis -> if not exsits -> check mongodb -> if not exists -> create
+        # check in redis -> if not exists -> check mongodb -> if not exists -> create
         mongo_user = await db["Users"].find_one({"user_id": user.id})
         if not mongo_user:
             print("creating user as it does not exist")
@@ -37,7 +38,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
             await db["Users"].insert_one(new_user)
             # add redis caching here to avoid querying mongodb again and again
 
-        return user
+        return user.model_dump()
                 
     except Exception as e:
         raise HTTPException(status_code=403, detail=f"Auth token validation failed: {str(e)}")

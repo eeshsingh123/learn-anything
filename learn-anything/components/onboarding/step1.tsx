@@ -19,7 +19,7 @@ import {
 type OnboardingStep1Props = {
     userSession: Session | null;
     userName: string;
-    onNext: () => void;
+    onNext: (workspaceId: string) => void;
 }
 
 const FormSchema = z.object({
@@ -36,10 +36,29 @@ export const OnboardingStep1 = ({ userSession, userName, onNext }: OnboardingSte
     })
 
     const handleTopicSubmit = async (data: z.infer<typeof FormSchema>) => {
-        // add backend logic to update db with topic
-        onNext();
-        console.log(data.topic);
-        console.log(userSession?.user.email)  // need to send this to the backend
+        try {
+            const response = await fetch('http://localhost:8000/workspaces/create_workspace', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userSession?.access_token}`,
+                },
+                body: JSON.stringify({
+                    topic: data.topic,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create workspace');
+            }
+
+            const result = await response.json();
+            const workspaceId = result.data.workspace_id;
+
+            onNext(workspaceId);
+        } catch (error) {
+            console.error('Error creating workspace:', error);
+        }
     }
 
     return (
@@ -51,7 +70,7 @@ export const OnboardingStep1 = ({ userSession, userName, onNext }: OnboardingSte
                     render={({ field }) => (
                         <FormItem className="flex flex-col items-start">
                             <span className="text-3xl font-medium pb-2">Hello, {userName}</span>
-                            <FormLabel className="mb-2 text-lg">Let&apos;s start with creating a project</FormLabel>
+                            <FormLabel className="mb-2 text-lg">Let&apos;s start with creating a workspace</FormLabel>
                             <FormControl className="w-full">
                                 <Textarea
                                     placeholder="Name your project"
