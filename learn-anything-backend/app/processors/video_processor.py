@@ -1,12 +1,18 @@
-import json
 import base64
 import mimetypes
-from typing import Dict
+from typing import Dict, List
+from pydantic import BaseModel
 
 from google import genai
 from google.genai import types
 from .base import FileProcessor
 from ..core.config import GEMINI_API_KEY
+
+
+class VideoResponse(BaseModel):
+    transcript: str
+    summary: str
+    key_moments: List[Dict[str, str]]  # List of dictionaries with 'timestamp' and 'description'
 
 
 class VideoProcessor(FileProcessor):
@@ -19,7 +25,7 @@ class VideoProcessor(FileProcessor):
                 return {"filename": filename, "error": "Google API key is missing"}
 
             # Encode video as base64
-            video_b64 = base64.b64encode(content)
+            video_b64 = base64.b64encode(content).decode("utf-8")
             mime_type, _ = mimetypes.guess_type(filename)
             mime_type = mime_type or "video/mp4"
 
@@ -31,9 +37,7 @@ class VideoProcessor(FileProcessor):
                 "Return a JSON object with these fields."
             )
 
-            # Process with Gemini 1.5 Flash
             try:
-
                 response = self.client.models.generate_content(
                     model="gemini-2.0-flash",
                     contents=[
@@ -43,28 +47,19 @@ class VideoProcessor(FileProcessor):
                         ),
                         prompt
                     ],
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        response_schema=VideoResponse
+                    )
                 )
-                llm_response = response.text
-
-                # Parse JSON if response is a string
-                if isinstance(llm_response, str):
-                    try:
-                        llm_response = json.loads(llm_response)
-                    except json.JSONDecodeError:
-                        llm_response = {"description": llm_response, "key_moments": []}
+                llm_response = response.parsed
             except Exception as e:
                 return {"filename": filename, "error": f"Gemini processing failed: {str(e)}"}
 
             # Store LLM response
             pages = [{
                 "page_number": 1,
-                "text": "",
-                "tables": [],
-                "videos": [],
-                "llm_data": {
-                    "description": llm_response.get("description", ""),
-                    "key_moments": llm_response.get("key_moments", [])
-                }
+                **llm_response.model_dump(exclude_unset=True)
             }]
 
             return {

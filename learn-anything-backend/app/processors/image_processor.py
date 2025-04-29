@@ -1,13 +1,26 @@
-import json
 import base64
 import mimetypes
-from typing import Dict
+from typing import Dict, List
+from pydantic import BaseModel
 
 from google import genai
 from google.genai import types
 
 from ..core.config import GEMINI_API_KEY
 from .base import FileProcessor
+
+
+# Response mode for Image generation
+class TableStructure(BaseModel):
+    columns: List[str]
+    rows: List[List[str]]
+
+class ImageResponse(BaseModel):
+    text: str
+    tables: List[TableStructure]
+    description: str
+    type: str
+
 
 
 class ImageProcessor(FileProcessor):
@@ -21,7 +34,7 @@ class ImageProcessor(FileProcessor):
                 return {"filename": filename, "error": "Google API key is missing"}
 
             # Encode image as base64
-            image_b64 = base64.b64encode(content)
+            image_b64 = base64.b64encode(content).decode("utf-8")
             mime_type, _ = mimetypes.guess_type(filename)
             mime_type = mime_type or "image/jpeg"
 
@@ -31,11 +44,8 @@ class ImageProcessor(FileProcessor):
                 "1. Any text (via OCR) in a 'text' field. If a table is detected, include it only in the 'tables' field and keep the text empty. "
                 "3. Classify the image as: document, infographic, timetable, invoice, or the category you feel it belongs to. "
                 "4. Any tables, formatted as an array of objects with 'columns' (array of strings) and 'rows' (array of arrays of strings). "
-                "5. Objects or people detected in an 'objects' field (array of strings). "
-                "6. A detailed scene description in a 'description' field. "
-                "7. Dominant colors in a 'colors' field (array of strings). "
-                "8. Image dimensions in 'width' and 'height' fields (in pixels, if available). "
-                "Return a JSON object with these fields."
+                "5. A detailed scene description in a 'description' field. "
+                "DO NOT mention the word json in your response."
             )
 
             # Process with Gemini
@@ -49,42 +59,21 @@ class ImageProcessor(FileProcessor):
                         ),
                         prompt
                     ],
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        response_schema=ImageResponse
+                    )
                 )
 
-                llm_response = response.text
-                # Parse JSON if response is a string
-                if isinstance(llm_response, str):
-                    try:
-                        llm_response = json.loads(llm_response)
-                    except json.JSONDecodeError:
-                        llm_response = {"description": llm_response, "text": "", "tables": [], "objects": [], "colors": []}
+                llm_response = response.parsed
             except Exception as e:
                 return {"filename": filename, "error": f"Gemini processing failed: {str(e)}"}
-
-            # Validate and format tables
-            tables = llm_response.get("tables", [])
-            formatted_tables = []
-            for table in tables:
-                if isinstance(table, dict) and "columns" in table and "rows" in table:
-                    formatted_tables.append({
-                        "columns": table["columns"],
-                        "rows": table["rows"]
-                    })
-                else:
-                    continue  # Skip invalid tables
 
             # Store image and LLM response
             pages = [{
                 "page_number": 1,
-                "text": llm_response.get("text", ""),
-                "tables": formatted_tables,
-                "images": [{
-                    "format": mime_type.split("/")[-1],
-                    "data": image_b64.decode("utf-8"),  # converting to a string before saving to mongodb
-                    "width": llm_response.get("width", None),
-                    "height": llm_response.get("height", None)
-                }],
-                "llm_data": llm_response  # Store full LLM response
+                "image": image_b64,
+                **llm_response.model_dump(exclude_unset=True)
             }]
 
             return {

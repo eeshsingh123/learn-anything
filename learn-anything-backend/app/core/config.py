@@ -19,7 +19,7 @@ MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "LearnDB")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 
 # LLM api keys
-GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 
 ALLOWED_FILE_TYPES = {
