@@ -21,6 +21,16 @@ ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 # LLM api keys
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
+# this mime type map is to map the actual file-type inside the mongodb document instead of keeping their extensions
+MIME_TYPE_MAP = {
+    "vnd.ms-excel": ["xls", "csv"],
+    "vnd.openxmlformats-officedocument.wordprocessingml.document": ["docx"],
+    "vnd.ms-powerpoint": ["ppt"],
+    "vnd.openxmlformats-officedocument.presentationml.presentation": ["pptx"],
+    "plain": ["txt"],
+    "vnd.openxmlformats-officedocument.spreadsheetml.sheet": ["xlsx"],
+    "msword": ["doc"]
+}
 
 ALLOWED_FILE_TYPES = {
     "application/pdf": [".pdf"],
