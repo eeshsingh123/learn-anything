@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, HttpUrl
 from fastapi import UploadFile
 from typing import List, Optional, Union
 import mimetypes
@@ -8,7 +8,7 @@ from ..core.config import ALLOWED_FILE_TYPES
 
 class FileInput(BaseModel):
     files: List[UploadFile]
-    urls: Optional[List[Union[str, None]]] = None
+    urls: Optional[List[Union[HttpUrl, None]]] = None
 
     @field_validator("files")
     @classmethod

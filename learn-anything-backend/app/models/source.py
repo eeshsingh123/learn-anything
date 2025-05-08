@@ -2,7 +2,7 @@ from enum import Enum
 from datetime import datetime
 
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 
 class Subtype(str, Enum):
@@ -16,6 +16,8 @@ class Subtype(str, Enum):
     csv='csv'
     txt= 'txt'
     url = 'url'
+    discovered = 'discovered'
+    drive = 'drive'
     mp3 = 'mp3'
     wav = 'wav'
     mp4 = 'mp4'
@@ -32,5 +34,7 @@ class Source(BaseModel):
     size: float
     page_count: int
     pages: List[Dict]
+    usage: Optional[Dict] = {}
+    batch_id: Optional[str] = None
     created_at: datetime
 

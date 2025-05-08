@@ -32,7 +32,7 @@ class VideoProcessor(FileProcessor):
             # Prepare prompt for Gemini
             prompt = (
                 "Analyze this video and extract key information in JSON format. Include: "
-                "1. A brief description of the video in a 'description' field. "
+                "1. A brief description of the video in a 'text' field. "
                 "2. A list of key moments (notable events or timestamps) in a 'key_moments' field, each with 'timestamp' (in seconds) and 'description'. "
                 "Return a JSON object with these fields."
             )

@@ -87,7 +87,7 @@ export const OnboardingStep1 = ({ userSession, userName, onNext }: OnboardingSte
                         Cancel
                     </Button>
                     <Button type="submit">
-                        Create Project
+                        Create Workspace
                     </Button>
                 </div>
             </form>

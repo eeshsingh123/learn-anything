@@ -7,6 +7,12 @@ load_dotenv()
 UVICORN_HOST = "0.0.0.0"
 UVICORN_PORT = 8000
 
+# GOOGLE CREDENTIALS
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+GOOGLE_REDIRECT_URI= os.getenv("GOOGLE_REDIRECT_URI")
+NEXT_REDIRECT_URL = os.getenv("NEXT_REDIRECT_URL")
+
 # supabase keys
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
@@ -20,6 +26,9 @@ ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 
 # LLM api keys
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Exa api key - for the web search
+EXA_API_KEY = os.getenv("EXA_API_KEY")
 
 # this mime type map is to map the actual file-type inside the mongodb document instead of keeping their extensions
 MIME_TYPE_MAP = {
@@ -48,3 +57,5 @@ ALLOWED_FILE_TYPES = {
     "image/jpeg": [".jpg", ".jpeg"],
     "image/png": [".png"],
 }
+
+PROCESSOR_REGISTRY = {}

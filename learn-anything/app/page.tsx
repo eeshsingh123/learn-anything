@@ -5,7 +5,7 @@ import { User, Session } from '@supabase/supabase-js';
 import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/client"
-import { OnboardingFlow } from "@/app/(onboarding)/onboarding/page";
+import { OnboardingFlow } from "@/components/onboarding/onboarding-main";
 
 import { Button } from "@/components/ui/button";
 
