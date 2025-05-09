@@ -49,17 +49,12 @@ interface OnboardingStep2Props {
     onNext: () => void;
 }
 
-const SELECTED_FILES_STORAGE_KEY = 'onboarding_selected_files';
 const SELECTED_DRIVE_FILES_STORAGE_KEY = 'onboarding_selected_drive_files';
 const SELECTED_URLS_STORAGE_KEY = 'onboarding_selected_urls';
 const DRIVE_CONNECTION_STATUS_KEY = 'drive_connection_status';
 
 export const OnboardingStep2 = ({ userSession, workspaceId, onNext }: OnboardingStep2Props) => {
-    const [files, setFiles] = useState<FileWithPreview[]>(() => {
-        const savedFiles = localStorage.getItem(SELECTED_FILES_STORAGE_KEY);
-        return savedFiles ? JSON.parse(savedFiles) : [];
-    });
-
+    const [files, setFiles] = useState<FileWithPreview[]>([]);
     const [urls, setUrls] = useState<string[]>(() => {
         const savedUrls = localStorage.getItem(SELECTED_URLS_STORAGE_KEY);
         return savedUrls ? JSON.parse(savedUrls) : [];
@@ -105,7 +100,7 @@ export const OnboardingStep2 = ({ userSession, workspaceId, onNext }: Onboarding
     // Fetch access token for Google Picker
     const fetchAccessToken = useCallback(async () => {
         try {
-            const response = await axios.get("http://localhost:8000/workspaces/auth/google/picker-token", {
+            const response = await axios.get("http://localhost:8000/onboarding/auth/google/picker-token", {
                 headers: {
                     "Authorization": `Bearer ${userSession?.access_token}`,
                 },
@@ -116,6 +111,13 @@ export const OnboardingStep2 = ({ userSession, workspaceId, onNext }: Onboarding
             console.error(error);
         }
     }, [userSession]);
+
+    // Add useEffect to fetch token on mount and when userSession changes
+    useEffect(() => {
+        if (userSession?.access_token) {
+            fetchAccessToken();
+        }
+    }, [userSession, fetchAccessToken]);
 
     // Open Google Picker
     const openGooglePicker = useCallback(() => {
@@ -156,11 +158,6 @@ export const OnboardingStep2 = ({ userSession, workspaceId, onNext }: Onboarding
 
         picker.setVisible(true);
     }, [pickerApiLoaded, accessToken]);
-
-
-    useEffect(() => {
-        localStorage.setItem(SELECTED_FILES_STORAGE_KEY, JSON.stringify(files));
-    }, [files]);
 
     useEffect(() => {
         localStorage.setItem(SELECTED_URLS_STORAGE_KEY, JSON.stringify(urls));
@@ -255,7 +252,7 @@ export const OnboardingStep2 = ({ userSession, workspaceId, onNext }: Onboarding
     const handleConnectDrive = async () => {
         try {
             setConnectionError(null);
-            const response = await axios.get("http://localhost:8000/workspaces/auth/google");
+            const response = await axios.get("http://localhost:8000/onboarding/auth/google");
             window.location.href = response.data.authorization_url;
         } catch (error) {
             setIsDriveConnected(false);
@@ -313,6 +310,10 @@ export const OnboardingStep2 = ({ userSession, workspaceId, onNext }: Onboarding
             if (currentPage > totalPages && totalPages > 0) {
                 setCurrentPage(totalPages)
             }
+            // Reset file input to allow reselection of the same file
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
             return filtered
         })
     }
@@ -329,6 +330,8 @@ export const OnboardingStep2 = ({ userSession, workspaceId, onNext }: Onboarding
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             processFiles(e.target.files)
+            // Reset the input value to allow reselection of the same file
+            e.target.value = '';
         }
     }
 
@@ -361,7 +364,7 @@ export const OnboardingStep2 = ({ userSession, workspaceId, onNext }: Onboarding
         formData.append("workspace_id", workspaceId)
 
         try {
-            const response = await axios.post("http://localhost:8000/workspaces/upload-files", formData, {
+            const response = await axios.post("http://localhost:8000/onboarding/upload-files", formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                     "Authorization": `Bearer ${userSession?.access_token}`,
@@ -396,7 +399,6 @@ export const OnboardingStep2 = ({ userSession, workspaceId, onNext }: Onboarding
                 fileInputRef.current.value = ""
             }
 
-            localStorage.removeItem(SELECTED_FILES_STORAGE_KEY);
             localStorage.removeItem(SELECTED_URLS_STORAGE_KEY);
             localStorage.removeItem(SELECTED_DRIVE_FILES_STORAGE_KEY);
 
@@ -527,7 +529,7 @@ export const OnboardingStep2 = ({ userSession, workspaceId, onNext }: Onboarding
                 </div>
             </div>
 
-            {(files.length > 0 || selectedDriveFiles.length > 0) && (
+            {(files.length > 0 || selectedDriveFiles.length > 0 || urls.length > 0) && (
                 <div className="mt-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {paginatedItems.map(({ type, item }) => (

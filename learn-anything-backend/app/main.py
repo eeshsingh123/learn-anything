@@ -4,11 +4,11 @@ import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api.routers.workspaces import router as workspaces_router
+from .api.routers.onboarding import router as onboarding_router
 from .core.config import UVICORN_HOST, UVICORN_PORT
 
 app = FastAPI()
-app.include_router(workspaces_router)
+app.include_router(onboarding_router)
 
 app.add_middleware(
     CORSMiddleware,

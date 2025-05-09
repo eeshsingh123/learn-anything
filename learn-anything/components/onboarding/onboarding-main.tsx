@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { Session } from '@supabase/supabase-js';
 
@@ -24,6 +25,7 @@ const ONBOARDING_STORAGE_KEY = 'onboarding_state';
 const ONBOARDING_COMPLETE_KEY = 'onboarding_complete';
 
 export const OnboardingFlow = ({ userSession, userName }: { userSession: Session | null; userName: string }) => {
+    const router = useRouter()
     const [state, setState] = useState<OnboardingState>(() => {
         const savedState = localStorage.getItem(ONBOARDING_STORAGE_KEY);
         const parsedState: OnboardingStorageState = savedState
@@ -48,6 +50,12 @@ export const OnboardingFlow = ({ userSession, userName }: { userSession: Session
         localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(storageState));
     }, [state.workspaceId, state.currentStep]);
 
+    useEffect(() => {
+        if (localStorage.getItem(ONBOARDING_COMPLETE_KEY) === "true") {
+            router.push(`/workspace`)
+        }
+    }, [router])
+
     const handleStep1Complete = (workspaceId: string) => {
         setState(prev => ({
             ...prev,
@@ -59,7 +67,7 @@ export const OnboardingFlow = ({ userSession, userName }: { userSession: Session
     const handleOnboardingComplete = () => {
         localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
         localStorage.removeItem(ONBOARDING_STORAGE_KEY);
-        setState(prev => ({ ...prev, currentStep: 3 }));
+        router.push(`/workspace/${state.workspaceId}`)
     }
 
     return (
